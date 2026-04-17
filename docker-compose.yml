@@ -1,0 +1,74 @@
+services:
+  mongo:
+    image: mongo:7.0.15
+    restart: unless-stopped
+    volumes:
+      - mongo_data:/data/db
+    ports:
+      - "27017:27017"
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  qdrant:
+    image: qdrant/qdrant:v1.12.5
+    restart: unless-stopped
+    volumes:
+      - qdrant_data:/qdrant/storage
+    ports:
+      - "6333:6333"
+      - "6334:6334"
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "bash -c 'exec 3<>/dev/tcp/127.0.0.1/6333'",
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 8
+      start_period: 20s
+
+  redis:
+    image: redis:7.4.2-alpine
+    restart: unless-stopped
+    # No host port: avoids conflict with a local Redis on 6379; API uses redis:6379 on the compose network.
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      MONGODB_URI: mongodb://mongo:27017/vault10k
+      QDRANT_URL: http://qdrant:6333
+      REDIS_URL: redis://redis:6379
+      FILINGS_DATA_DIR: /data/filings
+      FASTEMBED_CACHE_DIR: /tmp/fastembed-cache
+      NODE_ENV: production
+      WEB_ORIGIN: http://localhost:3001
+    ports:
+      - "3001:3001"
+    volumes:
+      - filings_data:/data/filings
+    depends_on:
+      mongo:
+        condition: service_healthy
+      qdrant:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+volumes:
+  mongo_data:
+  qdrant_data:
+  filings_data:

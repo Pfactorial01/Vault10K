@@ -1,0 +1,9 @@
+# Default: normalize line endings on checkout
+* text=auto eol=lf
+
+# Sources
+*.{ts,tsx,js,jsx,mjs,cjs,json,css,scss,html,yml,yaml,md,sh} text eol=lf
+
+# Binary
+*.{png,jpg,jpeg,gif,ico,svg,webp,woff,woff2,eot,ttf} binary
+*.{pdf,zip,tgz} binary

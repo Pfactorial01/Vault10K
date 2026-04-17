@@ -1,0 +1,14 @@
+{
+  "name": "vault10k",
+  "private": true,
+  "workspaces": [
+    "apps/api",
+    "apps/web"
+  ],
+  "scripts": {
+    "build": "npm run build -w apps/web && npm run build -w apps/api",
+    "test": "npm run test -w apps/api",
+    "dev:api": "npm run dev -w apps/api",
+    "dev:web": "npm run dev -w apps/web"
+  }
+}
